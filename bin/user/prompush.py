@@ -97,18 +97,16 @@ class PromPush(weewx.restx.StdRESTful):
         _manager_dict = weewx.manager.get_manager_dict(
             config_dict['DataBindings'], config_dict['Databases'], 'wx_binding')
 
-        self.archive_queue = Queue.Queue()
-        self.archive_thread = PromPushThread(self.archive_queue, _manager_dict,
-                                             **_prom_dict)
-
-        self.archive_thread.start()
-        self.bind(weewx.NEW_ARCHIVE_RECORD, self.new_archive_record)
-
+        self.loop_queue = Queue.Queue()
+        self.loop_thread = PromPushThread(self.loop_queue, _manager_dict,
+                                          **_prom_dict)
+        self.loop_thread.start()
+        self.bind(weewx.NEW_LOOP_PACKET, self.new_loop_packet)
         loginfo("data will be sent to pushgateway at %s:%s" %
                 (_prom_dict['host'], _prom_dict['port']))
 
-    def new_archive_record(self, event):
-        self.archive_queue.put(event.record)
+    def new_loop_packet(self, event):
+        self.loop_queue.put(event.packet)
 
 
 class PromPushThread(weewx.restx.RESTThread):
@@ -165,11 +163,18 @@ class PromPushThread(weewx.restx.RESTThread):
         if self.instance is not "":
             pushgw_url += "/instance/" + self.instance
 
-        res = requests.post(url=pushgw_url,
+        _res = requests.post(url=pushgw_url,
                             data=data,
                             headers={'Content-Type': 'application/octet-stream'})
 
-        loginfo("prompush: post return code - %s" % res.status_code)
+        loginfo("pushgw post return code - %s" % _res.status_code)
+        if 200 <= _res.status_code <= 299:
+            # success
+            return
+        else:
+            # something went awry
+            logerr("pushgw post error: %s" % _res.text)
+            return
 
 
     def process_record(self, record, dbm):
@@ -181,8 +186,13 @@ class PromPushThread(weewx.restx.RESTThread):
             loginfo("-- prompush: skipping post")
         else:
             for key, val in record.iteritems():
+                if val is None:
+                    val = 0.0
+
                 if weather_metrics.get(key):
-                    # annotate the submission with the appropriate metric type
+                    # annotate the submission with the appropriate metric type.
+                    # if there's no metric type supplied the pushgw will
+                    # annotate with 'untyped'
                     record_data += "# TYPE %s %s\n" % (str(key), weather_metrics[key])
 
                 record_data += "%s %s\n" % (str(key), str(val))
