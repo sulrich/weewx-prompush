@@ -1,6 +1,7 @@
 #!/usr/bin/env python
 
 """
+sample output from simulator
 
 key          value               type
 ----------------------------------------
@@ -34,11 +35,10 @@ cloudbase    2122.17697538
 
 """
 
-
-weather_info_types = {
+weather_metrics = {
     'outHumidity':  'gauge',
     'maxSolarRad':  'gauge',
-    'altimeter':    'guage',
+    'altimeter':    'gauge',
     'heatindex':    'gauge',
     'radiation':    'gauge',
     'inDewpoint':   'gauge',
@@ -64,8 +64,6 @@ weather_info_types = {
     'windGustDir':  'gauge',
     'cloudbase':    'gauge'
 }
-
-
 
 __version__ = '0.1.0'
 
@@ -161,16 +159,17 @@ class PromPushThread(weewx.restx.RESTThread):
         self.skip_post = weeutil.weeutil.to_bool(skip_post)
 
     def post_metrics(self, data):
-        # TODO: handle instance packing
-        loginfo( "%s \n%s" % (self.job, data))
-
-        url = 'http://' + self.host + ":" + self.port + "/metrics/job/" + self.job
+        # post the weather stats to the prometheus push gw
+        pushgw_url = 'http://' + self.host + ":" + self.port + "/metrics/job/" + self.job
 
         if self.instance is not "":
-            url += "/instance/" + self.instance
+            pushgw_url += "/instance/" + self.instance
 
-        print "url: ", url
-        print "data: ", data
+        res = requests.post(url=pushgw_url,
+                            data=data,
+                            headers={'Content-Type': 'application/octet-stream'})
+
+        loginfo("prompush: post return code - %s" % res.status_code)
 
 
     def process_record(self, record, dbm):
@@ -182,8 +181,9 @@ class PromPushThread(weewx.restx.RESTThread):
             loginfo("-- prompush: skipping post")
         else:
             for key, val in record.iteritems():
-                if weather_info_types.get(key):
-                    record_data += "# TYPE %s %s\n" % (str(key), weather_info_types[key])
+                if weather_metrics.get(key):
+                    # annotate the submission with the appropriate metric type
+                    record_data += "# TYPE %s %s\n" % (str(key), weather_metrics[key])
 
                 record_data += "%s %s\n" % (str(key), str(val))
 
