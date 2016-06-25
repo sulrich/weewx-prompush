@@ -42,6 +42,6 @@ sudo /etc/init.d/weewx start
 ```
 
 ## administravia
-**author:** steve ulrich \<[sulrich@botwerks.org](mailto:sulrich@botwerks.org)\>
-**license:** Apache License, Version 2.0. See LICENSE.
-**source:** [https://github.com/sulrich/weewx-prompush](https://github.com/sulrich/weewx-prompush)
+**author:** steve ulrich \<[sulrich@botwerks.org](mailto:sulrich@botwerks.org)\>  
+**license:** Apache License, Version 2.0. See LICENSE.  
+**source:** [https://github.com/sulrich/weewx-prompush](https://github.com/sulrich/weewx-prompush)  
