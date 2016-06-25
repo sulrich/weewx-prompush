@@ -6,12 +6,10 @@ setup for weewx prometheus pushgateway pusher
 """
 
 __title__ = 'PromPush'
-__version__ = '0.1.0'
+__version__ = '1.0.0'
 __author__ = 'steve ulrich <sulrich@botwerks.org>'
-# installer code lifted from graphite installer which i previously used for
-# weather stats collection - preserving license and original copyright
 __license__ = 'Apache License, Version 2.0'
-__copyright__ = 'Copyright 2014 OnBeep, Inc.'
+
 
 import setup
 

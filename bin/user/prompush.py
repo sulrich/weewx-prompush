@@ -31,7 +31,7 @@ windSpeed    0.00032377056758    gauge
 inHumidity   29.9974099203       gauge
 windGust     0.0004618843668     gauge
 windGustDir  359.986143469       gauge
-cloudbase    2122.17697538
+cloudbase    2122.17697538       gauge
 
 """
 
@@ -65,7 +65,7 @@ weather_metrics = {
     'cloudbase':    'gauge'
 }
 
-__version__ = '0.1.0'
+__version__ = '1.0.0'
 
 import weewx
 import weewx.restx
