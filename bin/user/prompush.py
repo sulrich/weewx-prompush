@@ -163,18 +163,20 @@ class PromPushThread(weewx.restx.RESTThread):
         if self.instance is not "":
             pushgw_url += "/instance/" + self.instance
 
-        _res = requests.post(url=pushgw_url,
-                            data=data,
-                            headers={'Content-Type': 'application/octet-stream'})
-
-        loginfo("pushgw post return code - %s" % _res.status_code)
-        if 200 <= _res.status_code <= 299:
-            # success
-            return
-        else:
-            # something went awry
-            logerr("pushgw post error: %s" % _res.text)
-            return
+        try:
+            _res = requests.post(url=pushgw_url,
+                                 data=data,
+                                 headers={'Content-Type': 'application/octet-stream'})
+            loginfo("pushgw post return code - %s" % _res.status_code)
+            if 200 <= _res.status_code <= 299:
+                # success
+                return
+            else:
+                # something went awry
+                logerr("pushgw post error: %s" % _res.text)
+                return
+        except requests.ConnectionError, e:
+            logerr("pushgw post error: %s" % e.message)
 
 
     def process_record(self, record, dbm):
